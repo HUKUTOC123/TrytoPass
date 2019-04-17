@@ -18,6 +18,7 @@ import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.api.directions.v5.models.DirectionsResponse;
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
+import com.mapbox.api.geocoding.v5.MapboxGeocoding;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
@@ -59,12 +60,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private NavigationMapRoute navigationMapRoute;
     // variables needed to initialize navigation
 
+    private double longitudeStart;
+    private double longitudeEnd;
+    private double lattitudeStart;
+    private double lattitudeEnd;
+
+    private MapboxGeocoding mapboxGeocoding;
     private Point destinationPoint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Mapbox.getInstance(this, getString(R.string.access_token));
+        Mapbox.getInstance(this, Consts.API_KEY);
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mapView = findViewById(R.id.mapView);
@@ -106,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
-        mapboxMap.setStyle(getString(R.string.mapbox_style_outdoors), style -> {
+        mapboxMap.setStyle(getString(R.string.mapbox_style_mapbox_streets), style -> {
             enableLocationComponent(style);
 
             addDestinationIconSymbolLayer(style);
@@ -114,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapboxMap.addOnMapClickListener(MainActivity.this);
         });
     }
+
 
     private void addDestinationIconSymbolLayer(@NonNull Style loadedMapStyle) {
         loadedMapStyle.addImage("destination-icon-id",
@@ -133,9 +141,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onMapClick(@NonNull LatLng point) {
 
+        //end point
         destinationPoint = Point.fromLngLat(point.getLongitude(), point.getLatitude());
+        lattitudeEnd = point.getLatitude();
+        longitudeEnd = point.getLongitude();
+        //start point
         Point originPoint = Point.fromLngLat(locationComponent.getLastKnownLocation().getLongitude(),
                 locationComponent.getLastKnownLocation().getLatitude());
+        lattitudeStart = locationComponent.getLastKnownLocation().getLatitude();
+        longitudeStart = locationComponent.getLastKnownLocation().getLongitude();
 
         GeoJsonSource source = mapboxMap.getStyle().getSourceAs("destination-source-id");
         if (source != null) {
@@ -148,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 point.getLatitude());
         getRoute(originPoint, destinationPoint);
         return true;
+
     }
 
     private void addDistance(double startLat, double startLng, double endLat, double endLng){
