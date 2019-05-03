@@ -16,6 +16,7 @@ import com.example.nikita99.trytopass.roomDataBase.Distance;
 import com.example.nikita99.trytopass.roomDataBase.DistanceDao;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.api.directions.v5.DirectionsCriteria;
 import com.mapbox.api.directions.v5.models.DirectionsResponse;
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
 import com.mapbox.api.geocoding.v5.MapboxGeocoding;
@@ -29,6 +30,8 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
+import com.mapbox.mapboxsdk.plugins.localization.MapLocale;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher;
@@ -114,6 +117,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
         mapboxMap.setStyle(getString(R.string.mapbox_style_mapbox_streets), style -> {
+            LocalizationPlugin localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
+            localizationPlugin.setMapLanguage(MapLocale.RUSSIAN);
             enableLocationComponent(style);
 
             addDestinationIconSymbolLayer(style);
@@ -180,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         NavigationRoute.builder(this)
                 .accessToken(Mapbox.getAccessToken())
                 .origin(origin)
+                .profile(DirectionsCriteria.PROFILE_CYCLING)
                 .destination(destination)
                 .build()
                 .getRoute(new Callback<DirectionsResponse>() {
@@ -225,6 +231,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Set the component's camera mode
             locationComponent.setCameraMode(CameraMode.TRACKING);
         } else {
+            Toast.makeText(this, "GPS включи!", Toast.LENGTH_SHORT).show();
             permissionsManager = new PermissionsManager(this);
             permissionsManager.requestLocationPermissions(this);
         }

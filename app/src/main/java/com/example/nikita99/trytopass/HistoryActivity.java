@@ -12,6 +12,7 @@ import android.widget.ListView;
 import com.example.nikita99.trytopass.roomDataBase.AppDataBase;
 import com.example.nikita99.trytopass.roomDataBase.Distance;
 import com.example.nikita99.trytopass.roomDataBase.DistanceDao;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +23,8 @@ public class HistoryActivity extends AppCompatActivity {
 
     private List<String> listData = new ArrayList<>();
     private ListView listView;
+    double rast;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,12 +36,19 @@ public class HistoryActivity extends AppCompatActivity {
         DistanceDao employeeDao = db.distanceDao();
 
         for(Distance distance: employeeDao.getAll()){
+            LatLng orig= new LatLng(distance.getStartLat(),distance.getStartLng());
+            LatLng destpoint= new LatLng(distance.getEndLat(), distance.getEndLng());
+            rast = destpoint.distanceTo(orig);
+            rast=Math.round(rast * 100.0) / 100.0;
             String coordinates =
                     "Начало:\n" +
                             getAddress(distance.getStartLat(),distance.getStartLng())
                             + ", "
                             + "\nКонец:\n"
-                            + getAddress(distance.getEndLat(), distance.getEndLng());
+                            + getAddress(distance.getEndLat(), distance.getEndLng())
+                            + ", "
+                            + "\nРасстояние:\n"
+                            +rast+"  метров";
             listData.add(coordinates);
         }
         listView = (ListView) findViewById(R.id.recycle);
@@ -61,4 +71,3 @@ public class HistoryActivity extends AppCompatActivity {
         return addresses.get(0).getAddressLine(0);
     }
 }
-
